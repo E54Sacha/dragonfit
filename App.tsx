@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, Text, View } from 'react-native';
+import { today } from './src/lib/nutrition';
 import { StoreProvider, useStore } from './src/lib/store';
 import AddFoodScreen from './src/screens/AddFoodScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
@@ -22,6 +23,7 @@ function Main() {
   const { ready } = useStore();
   const [tab, setTab] = useState<Tab>('today');
   const [adding, setAdding] = useState(false);
+  const [date, setDate] = useState(today()); // jour affiché dans Festin
 
   if (!ready) {
     return (
@@ -31,12 +33,12 @@ function Main() {
     );
   }
 
-  if (adding) return <AddFoodScreen onDone={() => setAdding(false)} />;
+  if (adding) return <AddFoodScreen date={date} onDone={() => setAdding(false)} />;
 
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-        {tab === 'today' && <TodayScreen onAdd={() => setAdding(true)} />}
+        {tab === 'today' && <TodayScreen date={date} onChangeDate={setDate} onAdd={() => setAdding(true)} />}
         {tab === 'workout' && <WorkoutScreen />}
         {tab === 'history' && <HistoryScreen />}
         {tab === 'profile' && <ProfileScreen />}

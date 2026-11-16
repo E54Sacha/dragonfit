@@ -1,5 +1,5 @@
 // Gamification : ton dragon compagnon gagne de l'XP grâce à ta régularité
-import { dailyTargets, sportKcalFor, sumEntries } from './nutrition';
+import { addDays, dailyTargets, sportKcalFor, sumEntries, today } from './nutrition';
 import { AppData } from './types';
 
 export interface DragonStage {
@@ -37,6 +37,22 @@ export function computeXp(data: AppData): number {
   xp += data.sessions.length * XP_RULES.session;
   xp += data.sets.length * XP_RULES.set;
   return xp;
+}
+
+/**
+ * Série : nombre de jours consécutifs avec au moins un repas noté.
+ * Si rien n'est encore noté aujourd'hui, la série d'hier reste valable.
+ */
+export function computeStreak(data: AppData): number {
+  const days = new Set(data.entries.map((e) => e.date));
+  let day = today();
+  if (!days.has(day)) day = addDays(day, -1);
+  let streak = 0;
+  while (days.has(day)) {
+    streak++;
+    day = addDays(day, -1);
+  }
+  return streak;
 }
 
 export function stageFor(xp: number) {

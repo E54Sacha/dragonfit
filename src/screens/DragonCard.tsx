@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image, Text, View } from 'react-native';
-import { computeXp, stageFor } from '../lib/dragon';
+import { computeStreak, computeXp, stageFor } from '../lib/dragon';
 import { useStore } from '../lib/store';
 import { Card, colors, ProgressBar, styles } from '../ui';
 
@@ -19,13 +19,21 @@ export default function DragonCard() {
   const xp = computeXp(data);
   const { stage, next, index, progress } = stageFor(xp);
   const name = data.profile.dragonName?.trim() || 'Ton dragon';
+  const streak = computeStreak(data);
 
   return (
     <Card style={{ borderColor: colors.accent + '66' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Image source={DRAGON_IMAGES[index]} style={{ width: 88, height: 88 }} />
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontSize: 18, fontWeight: '800' }}>{name}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: '800' }}>{name}</Text>
+            {streak > 0 && (
+              <Text style={{ color: colors.accent, fontWeight: '800' }}>
+                🔥 {streak} j
+              </Text>
+            )}
+          </View>
           <Text style={{ color: colors.gold, fontSize: 13, fontWeight: '600' }}>
             {stage.name} · niveau {index + 1}
           </Text>

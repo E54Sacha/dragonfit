@@ -114,6 +114,24 @@ export function today(): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+/** Décale une date AAAA-MM-JJ de n jours */
+export function addDays(date: string, n: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const dt = new Date(y, m - 1, d + n);
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getDate()).padStart(2, '0');
+  return `${dt.getFullYear()}-${mm}-${dd}`;
+}
+
+/** Libellé lisible : Aujourd'hui, Hier, ou « lun. 14 nov. » */
+export function dayLabel(date: string): string {
+  const t = today();
+  if (date === t) return "Aujourd'hui";
+  if (date === addDays(t, -1)) return 'Hier';
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 export function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }

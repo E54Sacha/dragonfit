@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, Text, View } from 'react-native';
-import { forGrams, today, uid } from '../lib/nutrition';
+import { forGrams, uid } from '../lib/nutrition';
 import { getByBarcode, searchFoods } from '../lib/openfoodfacts';
 import { useStore } from '../lib/store';
 import { Food, Meal, MEAL_LABELS, SavedMeal } from '../lib/types';
@@ -18,7 +18,7 @@ function guessMeal(): Meal {
   return 'diner';
 }
 
-export default function AddFoodScreen({ onDone }: { onDone: () => void }) {
+export default function AddFoodScreen({ onDone, date }: { onDone: () => void; date: string }) {
   const { addEntry } = useStore();
   const [mode, setMode] = useState<Mode>('search');
   const [selected, setSelected] = useState<Food | null>(null);
@@ -34,7 +34,7 @@ export default function AddFoodScreen({ onDone }: { onDone: () => void }) {
         food={selected}
         onBack={() => setMode('search')}
         onSave={(grams, meal) => {
-          addEntry({ id: uid(), date: today(), meal, food: selected, grams });
+          addEntry({ id: uid(), date, meal, food: selected, grams });
           onDone();
         }}
       />
@@ -61,7 +61,7 @@ export default function AddFoodScreen({ onDone }: { onDone: () => void }) {
       />
       <View style={{ flex: 1, marginTop: 12 }}>
         {mode === 'search' && <SearchFood onPick={pick} />}
-        {mode === 'meals' && <SavedMeals onDone={onDone} />}
+        {mode === 'meals' && <SavedMeals onDone={onDone} date={date} />}
         {mode === 'scan' && <ScanFood onPick={pick} />}
         {mode === 'manual' && <ManualFood onPick={pick} />}
       </View>
@@ -158,12 +158,12 @@ function QuickPicks({
 }
 
 /** Repas enregistrés : un clic ajoute tous les aliments au repas choisi */
-function SavedMeals({ onDone }: { onDone: () => void }) {
+function SavedMeals({ onDone, date }: { onDone: () => void; date: string }) {
   const { data, addEntries, removeSavedMeal } = useStore();
 
   const addMeal = (m: SavedMeal) => {
     const add = (meal: Meal) => {
-      addEntries(m.items.map((it) => ({ id: uid(), date: today(), meal, food: it.food, grams: it.grams })));
+      addEntries(m.items.map((it) => ({ id: uid(), date, meal, food: it.food, grams: it.grams })));
       onDone();
     };
     Alert.alert(`Ajouter « ${m.name} »`, 'À quel repas ?', [

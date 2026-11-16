@@ -1,14 +1,26 @@
 import React from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { dailyTargets, forGrams, sportKcalFor, sumEntries, today, uid } from '../lib/nutrition';
+import { addDays, dailyTargets, dayLabel, forGrams, sportKcalFor, sumEntries, today, uid } from '../lib/nutrition';
 import { useStore } from '../lib/store';
 import { Meal, MEAL_LABELS } from '../lib/types';
 import { Button, Card, colors, ProgressBar, styles, Title } from '../ui';
 import DragonCard from './DragonCard';
 
-export default function TodayScreen({ onAdd }: { onAdd: () => void }) {
-  const { data, removeEntry, saveMeal } = useStore();
-  const d = today();
+export default function TodayScreen({
+  onAdd,
+  date: d,
+  onChangeDate,
+}: {
+  onAdd: () => void;
+  date: string;
+  onChangeDate: (d: string) => void;
+}) {
+  const { data, removeEntry, saveMeal, addEntries } = useStore();
+  const isToday = d === today();
+  const yesterdayEntries = data.entries.filter((e) => e.date === addDays(d, -1));
+
+  const copyYesterday = () =>
+    addEntries(yesterdayEntries.map((e) => ({ ...e, id: uid(), date: d })));
   const entries = data.entries.filter((e) => e.date === d);
   const total = sumEntries(entries);
   const sport = sportKcalFor(data.sessions, d);
@@ -39,7 +51,24 @@ export default function TodayScreen({ onAdd }: { onAdd: () => void }) {
     <ScrollView contentContainerStyle={{ padding: 16 }}>
       <Title>Festin du jour</Title>
 
-      <DragonCard />
+      {isToday && <DragonCard />}
+
+      {/* Navigation entre les jours */}
+      <View style={[styles.row, { marginBottom: 12 }]}>
+        <Pressable onPress={() => onChangeDate(addDays(d, -1))} hitSlop={12} style={{ padding: 6 }}>
+          <Text style={{ color: colors.accent, fontSize: 22, fontWeight: '800' }}>‹</Text>
+        </Pressable>
+        <Pressable onPress={() => onChangeDate(today())}>
+          <Text style={[styles.text, { fontWeight: '700', fontSize: 17 }]}>{dayLabel(d)}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => !isToday && onChangeDate(addDays(d, 1))}
+          hitSlop={12}
+          style={{ padding: 6, opacity: isToday ? 0.2 : 1 }}
+        >
+          <Text style={{ color: colors.accent, fontSize: 22, fontWeight: '800' }}>›</Text>
+        </Pressable>
+      </View>
 
       <Card>
         <View style={styles.row}>
@@ -65,6 +94,9 @@ export default function TodayScreen({ onAdd }: { onAdd: () => void }) {
       </Card>
 
       <Button title="🍖 Ajouter un aliment" onPress={onAdd} />
+      {entries.length === 0 && yesterdayEntries.length > 0 && (
+        <Button title={`↺ Copier les repas de la veille (${yesterdayEntries.length})`} variant="ghost" onPress={copyYesterday} />
+      )}
 
       {(Object.keys(MEAL_LABELS) as Meal[]).map((meal) => {
         const list = entries.filter((e) => e.meal === meal);

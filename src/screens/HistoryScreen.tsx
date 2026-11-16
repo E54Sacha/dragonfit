@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { dailyTargets, SESSION_TYPES, sportKcalFor, sumEntries } from '../lib/nutrition';
+import { dailyTargets, SESSION_TYPES, sportKcalFor, sumEntries, today } from '../lib/nutrition';
 import { useStore } from '../lib/store';
-import { Card, Chips, colors, styles, Title } from '../ui';
+import { Button, Card, Chips, colors, Input, styles, Title } from '../ui';
 
 const DAY_NAMES = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
@@ -25,12 +25,17 @@ function BarChart({
   bars,
   height = 140,
   unit,
+  color = colors.accent,
+  min = 0,
 }: {
   bars: { label: string; value: number; target?: number; color?: string }[];
   height?: number;
   unit: string;
+  color?: string;
+  min?: number; // valeur du bas de l'axe (utile pour le poids)
 }) {
-  const max = Math.max(1, ...bars.map((b) => Math.max(b.value, b.target ?? 0)));
+  const top = Math.max(min + 1, ...bars.map((b) => Math.max(b.value, b.target ?? 0)));
+  const scale = (v: number) => Math.max(0, (v - min) / (top - min));
   return (
     <View>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', height, gap: 6 }}>
@@ -43,7 +48,7 @@ function BarChart({
                   position: 'absolute',
                   left: 0,
                   right: 0,
-                  bottom: (b.target / max) * height,
+                  bottom: scale(b.target) * height,
                   height: 2,
                   backgroundColor: colors.muted,
                 }}
@@ -51,8 +56,8 @@ function BarChart({
             )}
             <View
               style={{
-                height: Math.max(2, (b.value / max) * height),
-                backgroundColor: b.color ?? colors.accent,
+                height: Math.max(2, scale(b.value) * height),
+                backgroundColor: b.color ?? color,
                 borderRadius: 4,
                 opacity: b.value === 0 ? 0.25 : 1,
               }}
@@ -63,7 +68,7 @@ function BarChart({
       <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
         {bars.map((b, i) => (
           <View key={i} style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ color: colors.text, fontSize: 10 }}>{b.value ? Math.round(b.value) : '–'}</Text>
+            <Text style={{ color: colors.text, fontSize: 10 }}>{b.value ? (b.value >= 200 || b.value % 1 === 0 ? Math.round(b.value) : b.value.toFixed(1)) : '–'}</Text>
             <Text style={{ color: colors.muted, fontSize: 10 }} numberOfLines={1}>
               {b.label}
             </Text>
@@ -76,7 +81,12 @@ function BarChart({
 }
 
 export default function HistoryScreen() {
-  const { data } = useStore();
+  const { data, logWeight } = useStore();
+  const [weightInput, setWeightInput] = useState('');
+  const todayWeight = data.weights.find((w) => w.date === today());
+  const lastWeights = data.weights.slice(-10);
+  const firstW = lastWeights[0]?.kg ?? 0;
+  const lastW = lastWeights[lastWeights.length - 1]?.kg ?? 0;
 
   // --- Calories sur 7 jours ---
   const week = useMemo(() => {
@@ -154,6 +164,52 @@ export default function HistoryScreen() {
               ({avgEaten > avgTarget ? '+' : ''}
               {Math.round(avgEaten - avgTarget)})
             </Text>
+          </Text>
+        )}
+      </Card>
+
+      <Card>
+        <Text style={[styles.text, { fontWeight: '700', marginBottom: 12 }]}>Poids</Text>
+        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+          <View style={{ flex: 1 }}>
+            <Input
+              value={weightInput}
+              onChangeText={setWeightInput}
+              keyboardType="decimal-pad"
+              placeholder={todayWeight ? `Aujourd'hui : ${todayWeight.kg} kg` : 'Poids du jour (kg)'}
+            />
+          </View>
+          <View style={{ width: 110 }}>
+            <Button
+              title="Noter"
+              disabled={!(Number(weightInput.replace(',', '.')) > 0)}
+              onPress={() => {
+                logWeight({ date: today(), kg: Number(weightInput.replace(',', '.')) });
+                setWeightInput('');
+              }}
+            />
+          </View>
+        </View>
+        {lastWeights.length > 0 ? (
+          <>
+            <View style={{ marginTop: 14 }}>
+              <BarChart
+                unit="kg · tes 10 dernières pesées"
+                color={colors.protein}
+                min={Math.floor(Math.min(...lastWeights.map((w) => w.kg)) - 2)}
+                bars={lastWeights.map((w) => ({ label: shortLabel(w.date).split(' ')[1], value: w.kg }))}
+              />
+            </View>
+            {lastWeights.length >= 2 && (
+              <Text style={[styles.text, { marginTop: 10 }]}>
+                {lastW - firstW >= 0 ? '+' : ''}
+                {(lastW - firstW).toFixed(1)} kg depuis le {shortLabel(lastWeights[0].date)}
+              </Text>
+            )}
+          </>
+        ) : (
+          <Text style={[styles.muted, { marginTop: 10 }]}>
+            Pèse-toi idéalement le matin à jeun, 1 à 2 fois par semaine. Ton profil se met à jour automatiquement.
           </Text>
         )}
       </Card>

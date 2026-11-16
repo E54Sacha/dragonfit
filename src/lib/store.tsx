@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ActiveSession, AppData, Food, FoodEntry, Profile, SavedMeal, Session, WorkoutSet } from './types';
+import { ActiveSession, AppData, Food, FoodEntry, Profile, SavedMeal, Session, WeightLog, WorkoutSet } from './types';
 
 const KEY = 'fitapp-data-v1';
 
@@ -12,6 +12,7 @@ const DEFAULT_DATA: AppData = {
   activeSession: null,
   favorites: [],
   savedMeals: [],
+  weights: [],
 };
 
 interface Store {
@@ -30,6 +31,7 @@ interface Store {
   toggleFavorite: (f: Food) => void;
   saveMeal: (m: SavedMeal) => void;
   removeSavedMeal: (id: string) => void;
+  logWeight: (w: WeightLog) => void; // remplace la pesée du même jour + met à jour le profil
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -75,6 +77,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           : [...d.favorites, f],
       })),
     saveMeal: (m) => setData((d) => ({ ...d, savedMeals: [...d.savedMeals, m] })),
+    logWeight: (w) =>
+      setData((d) => ({
+        ...d,
+        weights: [...d.weights.filter((x) => x.date !== w.date), w].sort((a, b) => a.date.localeCompare(b.date)),
+        profile: { ...d.profile, weightKg: w.kg },
+      })),
     removeSavedMeal: (id) => setData((d) => ({ ...d, savedMeals: d.savedMeals.filter((m) => m.id !== id) })),
   };
 

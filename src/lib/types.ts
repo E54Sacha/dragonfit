@@ -97,4 +97,10 @@ export interface AppData {
   activeSession: ActiveSession | null;
   favorites: Food[];
   savedMeals: SavedMeal[];
+  weights: WeightLog[];
+}
+
+export interface WeightLog {
+  date: string; // AAAA-MM-JJ (une pesée par jour max)
+  kg: number;
 }
