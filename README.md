@@ -1,59 +1,81 @@
-# FitApp: suivi nutrition et musculation
+# 🐉 DragonFit
 
-Application iPhone (React Native + Expo) pour suivre précisément ses calories, ses macros et ses séances de musculation.
+**Application iPhone de suivi nutritionnel et de musculation, gamifiée autour d'un dragon compagnon qui grandit avec ta régularité.**
 
-## Fonctionnalités (V1)
+![Les 5 stades du dragon](docs/dragons.png)
 
-- **Objectifs personnalisés** : métabolisme de base (formule de Mifflin-St Jeor), dépense totale selon l'activité, objectif perte / maintien / prise de masse, répartition des macros (protéines 2 g/kg, lipides 25 %, glucides le reste).
-- **Journal alimentaire** : suivi par repas, calories restantes, barres de progression des macros.
-- **Ajout d'aliments de 3 façons** :
-  - recherche texte dans **Open Food Facts** (base gratuite, très fournie en produits français),
-  - **scan de code-barres** avec la caméra,
-  - saisie manuelle des valeurs de l'étiquette.
-- **Journal de musculation** : séries / répétitions / charge, exercices récents en un clic, record personnel, volume total de la séance.
-- Données stockées **sur le téléphone** (AsyncStorage) : pas de compte, pas de serveur.
+> Projet personnel développé en React Native / Expo, avec l'aide de Claude (Anthropic) comme assistant de développement.
 
-## Lancer l'appli sur ton iPhone (depuis un PC Windows)
+---
 
-1. Installe **Node.js LTS** : https://nodejs.org
-2. Sur l'iPhone, installe **Expo Go** depuis l'App Store.
-3. Dézippe le projet, ouvre un terminal dans le dossier, puis :
-   ```bash
-   npm install
-   npx expo start
-   ```
-4. Scanne le QR code affiché avec l'appareil photo de l'iPhone : l'appli s'ouvre dans Expo Go.
-   - Le PC et l'iPhone doivent être sur le **même Wi-Fi**. Sinon (Wi-Fi d'université par exemple) : `npx expo start --tunnel`.
-5. Chaque fois que tu modifies le code, l'appli se recharge toute seule sur le téléphone.
+## ✨ Fonctionnalités
 
-Si Expo Go signale une version de SDK incompatible, lance `npx expo install --fix`.
+### 🍖 Festin : suivi nutritionnel
+- Objectif calorique personnalisé : métabolisme de base (**Mifflin-St Jeor**), activité quotidienne, objectif perte / maintien / prise de masse
+- Répartition des macros : protéines 2 g/kg, lipides 25 %, glucides le reste
+- Ajout d'aliments par **recherche** ou **scan de code-barres** via l'API **Open Food Facts**, ou par saisie manuelle
+- **Favoris**, aliments récents et **repas enregistrés** ajoutables en un clic
 
-## Structure du code
+### ⚔️ Entraînement
+- **Chrono de séance** persistant (il continue même si l'appli est fermée)
+- Calcul des calories dépensées avec les **METs** du *Compendium of Physical Activities* : `(MET − 1) × poids × durée`, sans double comptage du métabolisme de repos
+- Journal des séries (répétitions × charge), exercices récents, record personnel
+
+### 📜 Chroniques
+- Graphiques des calories sur 7 jours par rapport à l'objectif
+- Progression de la charge maximale par exercice
+- Historique des séances
+
+### 🐉 Dragon compagnon
+Le dragon gagne de l'XP avec la régularité (repas notés, objectif respecté à ±10 %, séances, séries) et évolue en 5 stades : **Œuf → Dragonnet → Jeune dragon → Dragon → Dragon ancien**. Les illustrations sont originales et générées en SVG.
+
+---
+
+## 🛠️ Stack technique
+
+| | |
+|---|---|
+| Framework | React Native 0.88 · Expo SDK 58 |
+| Langage | TypeScript |
+| Données | AsyncStorage (tout est stocké sur l'appareil, sans serveur) |
+| API | Open Food Facts |
+| Natif | expo-camera (scan de codes-barres) |
+
+Les graphiques sont faits sans librairie, à partir de simples `View` React Native.
+
+## 📁 Architecture
 
 ```
-App.tsx                      Barre d'onglets et navigation
+App.tsx                    Navigation par onglets
 src/
-  ui.tsx                     Composants et couleurs réutilisables
+  ui.tsx                   Design system (couleurs du thème Dragon, composants)
   lib/
-    types.ts                 Types (aliment, repas, série, profil)
-    nutrition.ts             Calculs : BMR, TDEE, objectifs, totaux
-    openfoodfacts.ts         Appels à l'API Open Food Facts
-    store.tsx                État global + sauvegarde locale
-  screens/
-    TodayScreen.tsx          Tableau de bord du jour
-    AddFoodScreen.tsx        Recherche / scan / saisie manuelle
-    WorkoutScreen.tsx        Journal de musculation
-    ProfileScreen.tsx        Profil et objectifs
+    types.ts               Modèle de données
+    nutrition.ts           Calculs : BMR, TDEE, macros, METs
+    dragon.ts              Système d'XP et stades du dragon
+    openfoodfacts.ts       Client de l'API Open Food Facts
+    store.tsx              État global (Context) + persistance locale
+  screens/                 Écrans de l'application
 ```
 
-## Pistes pour la V2
+## 🚀 Lancer le projet
 
-- Historique et graphiques (poids, calories sur 7/30 jours, progression par exercice)
-- Aliments favoris et repas enregistrés
-- Analyse d'une photo de repas avec l'API Claude
-- Synchronisation Apple Santé (nécessite un « development build » et un compte développeur Apple)
-- Tests unitaires des calculs (`nutrition.ts`)
+```bash
+npm install
+npx expo start
+```
+Scanne ensuite le QR code avec l'appareil photo de l'iPhone. Il faut l'appli **Expo Go** et un compte Expo connecté sur le PC et sur le téléphone.
 
-## Stack
+## 🗺️ Feuille de route
 
-React Native 0.88 · Expo SDK 58 · TypeScript · expo-camera · AsyncStorage · API Open Food Facts
+- [ ] Analyse d'une photo de repas avec l'API Claude
+- [ ] Synchronisation Apple Santé
+- [ ] Graphique d'évolution du poids
+- [ ] Distribution via TestFlight
+- [ ] Tests unitaires des calculs nutritionnels
+
+## 🤖 Méthode de travail avec l'IA
+
+Ce projet a été développé en binôme avec Claude. Mon rôle : définir les besoins et les fonctionnalités, faire les choix produit (thème, gamification, règles d'XP), tester sur l'appareil et valider chaque étape.
+
+<!-- À personnaliser : ajoute ici un exemple concret de décision que tu as prise, ou d'un bug que tu as repéré et fait corriger. -->
