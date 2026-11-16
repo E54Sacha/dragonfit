@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "fitapp",
+    "name": "DragonFit",
     "slug": "fitapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true
     },
@@ -20,6 +20,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "backgroundColor": "#120C0A",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FitApp utilise la caméra pour scanner les codes-barres des aliments."
+        }
+      ]
+    ]
   }
 }
